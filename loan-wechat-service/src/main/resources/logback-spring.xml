@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration debug="false" scan="false" scanPeriod="1 seconds">
+    <contextName>logback</contextName>
+    <!-- 导入SpringBoot默认的logback配置 -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <springProperty scope="context" name="logPath" source="logging.path" defaultValue="../logs"/>
+    <!-- 获取日志文件的名称（取自bootstrap.yml/bootstrap.properties文件） -->
+    <springProperty scope="context" name="logFile" source="logging.file" defaultValue="application.log"/>
+    <!-- 获取当前启动的应用名称 （取自bootstrap.yml/bootstrap.properties文件）-->
+    <springProperty scope="context" name="applicationName" source="spring.application.name"/>
+    <!-- 获取当前启动应用的日志级别（取自bootstrap.yml/bootstrap.properties文件） -->
+    <springProperty scope="context" name="logLevel" source="logging.level.root" defaultValue="INFO"/>
+
+    <property name="FILE_LOG_PATTERN" value="%d [%thread] %-5level %logger{36} [%file : %line] - %msg%n"/>
+
+    <appender name="stdout_info" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <pattern>%d [%thread] %-5level %logger{36} [%file : %line] - %msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="stdout_warn" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>WARN</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <pattern>%yellow(%d [%thread] %-5level %logger{36} [%file : %line] - %msg%n)</pattern>
+        </encoder>
+    </appender>
+    <appender name="stdout_error" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <encoder>
+            <pattern>%red(%d [%thread] %-5level %logger{36} [%file : %line] - %msg%n)</pattern>
+        </encoder>
+    </appender>
+    <!-- 默认的日志文件输出 -->
+    <appender name="file.log" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <append>true</append>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+        <file>${logPath}/${logFile}.log</file>
+        <!-- 日志生成策略，按日备份，最大保留30天，每128M切分一个日志文件 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${logPath}/%d{yyyy-MM-dd}/${logFile}.log.%i.gz</fileNamePattern>
+            <maxHistory>60</maxHistory>
+            <maxFileSize>1000MB</maxFileSize>
+            <totalSizeCap>50GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <springProfile name="dev">
+        <root level="${logLevel}">
+            <appender-ref ref="stdout_info"/>
+            <appender-ref ref="stdout_warn"/>
+            <appender-ref ref="stdout_error"/>
+            <appender-ref ref="file.log"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="sit">
+    </springProfile>
+
+    <springProfile name="uat">
+    </springProfile>
+
+    <springProfile name="prd">
+        <appender name="prd-logstash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+            <keepAliveDuration>5 minutes</keepAliveDuration>
+            <reconnectionDelay>10 second</reconnectionDelay>
+            <waitStrategyType>sleeping</waitStrategyType>
+            <!-- 配置logstash地址 -->
+            <destination>193.168.39.29:9610</destination>
+            <destination>193.168.39.27:9610</destination>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            </encoder>
+            <connectionStrategy>
+                <roundRobin>
+                    <connectionTTL>5 minutes</connectionTTL>
+                </roundRobin>
+            </connectionStrategy>
+        </appender>
+
+        <root level="${logLevel}">
+            <appender-ref ref="file.log"/>
+            <appender-ref ref="prd-logstash"/>
+        </root>
+    </springProfile>
+
+    <logger name="stdout_log" level="${logLevel}" additivity="false">
+        <appender-ref ref="stdout_info"/>
+        <appender-ref ref="stdout_warn"/>
+        <appender-ref ref="stdout_error"/>
+        <appender-ref ref="file.log"/>
+    </logger>
+</configuration>

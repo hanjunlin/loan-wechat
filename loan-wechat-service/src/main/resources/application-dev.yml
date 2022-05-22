@@ -1,0 +1,13 @@
+app:
+  wechat:
+    corpid: wxc5405da5e4c4a12f1
+    corpsecret: p_6LDj3rxJxdF2P2pyhJbajw_H5u7aOyog4bDTyAWK81
+    userExtMap:
+      u001:
+        password: "001"
+        agentid: 1
+        toparty: "2"
+      u002:
+        password: "002"
+        agentid: 1
+        toparty: "2"

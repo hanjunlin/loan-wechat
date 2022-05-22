@@ -1,0 +1,13 @@
+server:
+  port: 8106 #应用启动端口
+spring:
+  profiles:
+    active: dev
+  application:
+    name: loan-wechat-service  #应用名称
+logging:
+  path: ../logs #日志文件路径
+  file: ${spring.application.name}_${server.port}.log #日志文件名称
+  level:
+    root: INFO
+    springfox.documentation.spring.web.readers.operation: OFF  #springfox日志关闭输出
